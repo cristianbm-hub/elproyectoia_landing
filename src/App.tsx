@@ -6,7 +6,7 @@ function App() {
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-slate-900 to-black text-white relative">
+    <div className="min-h-screen bg-gradient-to-b from-black via-slate-900 to-black text-white relative overflow-x-hidden">
       {/* Newsletter Popup */}
       <NewsletterPopup 
         isOpen={isNewsletterOpen} 
@@ -30,13 +30,13 @@ function App() {
           <div className="relative mb-8">
             <Brain className="w-32 h-32 text-blue-500 animate-pulse" />
             <div className="absolute -inset-4 bg-blue-500/20 blur-2xl rounded-full"></div>
-            <Sparkles className="absolute -right-6 -top-6 w-10 h-10 text-yellow-400 animate-bounce" />
-            <CircuitBoard className="absolute -left-6 -bottom-6 w-10 h-10 text-purple-400 animate-bounce delay-100" />
+            <Sparkles className="absolute -right-6 -top-6 w-10 h-10 text-yellow-400 animate-soft-bounce transition-transform duration-300" />
+            <CircuitBoard className="absolute -left-6 -bottom-6 w-10 h-10 text-purple-400 animate-soft-bounce-delayed transition-transform duration-300" />
           </div>
-          <h1 className="text-7xl md:text-9xl font-bold mb-8 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(59,130,246,0.5)]">
+          <h1 className="text-5xl sm:text-7xl md:text-9xl font-bold mb-8 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(59,130,246,0.5)] whitespace-nowrap">
             El Proyecto IA
           </h1>
-          <p className="text-2xl md:text-3xl text-blue-100 max-w-4xl mb-16 leading-relaxed">
+          <p className="text-lg sm:text-2xl md:text-3xl text-blue-100 max-w-4xl mb-16 leading-relaxed">
             Navegando juntos hacia el futuro de la inteligencia artificial. 
             <span className="block mt-4 text-blue-400 font-light">Te guiamos para aprovechar las oportunidades del futuro digital.</span>
           </p>

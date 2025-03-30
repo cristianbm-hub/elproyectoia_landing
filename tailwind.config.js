@@ -15,6 +15,10 @@ export default {
         'orbit-reverse': {
           '0%': { transform: 'rotate(360deg) translateX(60px) rotate(-360deg)' },
           '100%': { transform: 'rotate(0deg) translateX(60px) rotate(0deg)' },
+        },
+        'soft-bounce': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
         }
       },
       animation: {
@@ -22,6 +26,8 @@ export default {
         'float-delayed': 'float 3s ease-in-out infinite 1.5s',
         'orbit': 'orbit 12s linear infinite',
         'orbit-reverse': 'orbit-reverse 12s linear infinite',
+        'soft-bounce': 'soft-bounce 2s ease-in-out infinite',
+        'soft-bounce-delayed': 'soft-bounce 2s ease-in-out infinite 1s',
       }
     },
   },
