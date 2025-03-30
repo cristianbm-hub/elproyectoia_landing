@@ -9,10 +9,10 @@ services:
       - "8083:80"
     restart: unless-stopped
     networks:
-      - app-network
+      - app-network-proyectoia
     environment:
       - NODE_ENV=production
 
 networks:
-  app-network:
+  app-network-proyectoia:
     driver: bridge 
