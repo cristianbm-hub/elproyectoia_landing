@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Brain, Users, Lightbulb, ArrowRight, Globe2, Code2, GraduationCap, Sparkles, CircuitBoard, Youtube, Instagram, Bot, Cpu, Network, LineChart, Blocks, Radar } from 'lucide-react';
+import { Brain, Users, Lightbulb, ArrowRight, Sparkles, CircuitBoard, Bot, Cpu, Network, LineChart, Blocks, Radar, GraduationCap, Youtube, Instagram } from 'lucide-react';
 import { NewsletterPopup } from './components/NewsletterPopup';
+import WorkflowGrid from './components/WorkflowGrid';
 
 function App() {
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
@@ -53,6 +54,12 @@ function App() {
               className="px-6 sm:px-10 py-3 sm:py-5 rounded-full text-lg sm:text-xl font-semibold border border-blue-900 hover:border-blue-700 hover:bg-blue-900/20 transition-all backdrop-blur-sm hover:shadow-[0_0_30px_rgba(37,99,235,0.2)] w-full sm:w-auto"
             >
               Ver Cursos
+            </button>
+            <button 
+              onClick={() => document.getElementById('templates')?.scrollIntoView({ behavior: 'smooth' })}
+              className="px-6 sm:px-10 py-3 sm:py-5 rounded-full text-lg sm:text-xl font-semibold border border-purple-900 hover:border-purple-700 hover:bg-purple-900/20 transition-all backdrop-blur-sm hover:shadow-[0_0_30px_rgba(147,51,234,0.2)] w-full sm:w-auto"
+            >
+              Ver Templates n8n
             </button>
           </div>
         </div>
@@ -202,6 +209,19 @@ function App() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Workflows Section */}
+      <section id="templates" className="container mx-auto px-4 py-32 relative">
+        <div className="text-center mb-20">
+          <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            Templates de n8n
+          </h2>
+          <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            Descarga templates predefinidos para automatizar tus procesos
+          </p>
+        </div>
+        <WorkflowGrid />
       </section>
 
       {/* Stats Section */}

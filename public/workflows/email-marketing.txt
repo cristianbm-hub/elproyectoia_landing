@@ -1,0 +1,89 @@
+{
+  "name": "Automatización de Email Marketing",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.cron",
+      "position": [100, 300],
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyWeek",
+              "dayOfWeek": 1,
+              "hour": 9,
+              "minute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "2",
+      "name": "Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [300, 300],
+      "parameters": {
+        "operation": "read",
+        "sheetName": "Suscriptores",
+        "range": "A:D"
+      }
+    },
+    {
+      "id": "3",
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "position": [500, 300],
+      "parameters": {
+        "functionCode": "// Personalizar los datos para cada suscriptor\nfor (const item of items) {\n  item.json.personalizacion = `Hola ${item.json.nombre}, te enviamos las últimas novedades sobre IA.`;\n}\nreturn items;"
+      }
+    },
+    {
+      "id": "4",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [700, 300],
+      "parameters": {
+        "to": "={{ $json[\"email\"] }}",
+        "subject": "Novedades semanales de IA",
+        "text": "={{ $json[\"personalizacion\"] }}\n\nDescubre los últimos avances en inteligencia artificial."
+      }
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+} 
