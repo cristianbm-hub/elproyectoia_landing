@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Brain, Users, Lightbulb, ArrowRight, Sparkles, CircuitBoard, Bot, Cpu, Network, LineChart, Blocks, Radar, GraduationCap, Youtube, Instagram } from 'lucide-react';
+import { Brain, Users, Lightbulb, ArrowRight, Sparkles, CircuitBoard, GraduationCap, Youtube, Instagram } from 'lucide-react';
 import { NewsletterPopup } from './components/NewsletterPopup';
 import WorkflowGrid from './components/WorkflowGrid';
+import CursosGrid from './components/CursosGrid';
 
 function App() {
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
@@ -100,115 +101,7 @@ function App() {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Course 1 */}
-          <div className="group relative">
-            <div className="absolute inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-500"></div>
-            <div className="relative bg-gradient-to-b from-slate-900 to-black border border-blue-900/50 rounded-3xl p-8 h-full hover:border-blue-500/50 transition-all">
-              <div className="absolute top-4 right-4 bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-blue-500/30">
-                Próximamente
-              </div>
-              <Bot className="w-12 h-12 text-blue-400 mb-6" />
-              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Fundamentos de IA</h3>
-              <p className="text-blue-100 mb-6">Domina los conceptos básicos y principios fundamentales de la Inteligencia Artificial.</p>
-              <div className="flex items-center gap-4 text-sm text-blue-300">
-                <span>8 semanas</span>
-                <span>•</span>
-                <span>Inicial</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Course 2 */}
-          <div className="group relative">
-            <div className="absolute inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-500"></div>
-            <div className="relative bg-gradient-to-b from-slate-900 to-black border border-purple-900/50 rounded-3xl p-8 h-full hover:border-purple-500/50 transition-all">
-              <div className="absolute top-4 right-4 bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-purple-500/30">
-                Próximamente
-              </div>
-              <Cpu className="w-12 h-12 text-purple-400 mb-6" />
-              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">Resolver Problemas con IA</h3>
-              <p className="text-blue-100 mb-6">Aprende técnicas y herramientas para resolver problemas con IA en proyectos reales.</p>
-              <div className="flex items-center gap-4 text-sm text-blue-300">
-                <span>12 semanas</span>
-                <span>•</span>
-                <span>Proyectos prácticos</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Course 3 */}
-          <div className="group relative">
-            <div className="absolute inset-0.5 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-500"></div>
-            <div className="relative bg-gradient-to-b from-slate-900 to-black border border-indigo-900/50 rounded-3xl p-8 h-full hover:border-indigo-500/50 transition-all">
-              <div className="absolute top-4 right-4 bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-indigo-500/30">
-                Próximamente
-              </div>
-              <Network className="w-12 h-12 text-indigo-400 mb-6" />
-              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent">Automatizaciones</h3>
-              <p className="text-blue-100 mb-6">Aprende a automatizar tareas y procesos con IA para aumentar la eficiencia.</p>
-              <div className="flex items-center gap-4 text-sm text-blue-300">
-                <span>10 semanas</span>
-                <span>•</span>
-                <span>Casos reales</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Course 4 */}
-          <div className="group relative">
-            <div className="absolute inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-500"></div>
-            <div className="relative bg-gradient-to-b from-slate-900 to-black border border-cyan-900/50 rounded-3xl p-8 h-full hover:border-cyan-500/50 transition-all">
-              <div className="absolute top-4 right-4 bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-cyan-500/30">
-                Próximamente
-              </div>
-              <LineChart className="w-12 h-12 text-cyan-400 mb-6" />
-              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent">Data Science para IA</h3>
-              <p className="text-blue-100 mb-6">Análisis de datos y visualización para proyectos de Inteligencia Artificial.</p>
-              <div className="flex items-center gap-4 text-sm text-blue-300">
-                <span>8 semanas</span>
-                <span>•</span>
-                <span>Casos prácticos</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Course 5 */}
-          <div className="group relative">
-            <div className="absolute inset-0.5 bg-gradient-to-r from-fuchsia-500 to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-500"></div>
-            <div className="relative bg-gradient-to-b from-slate-900 to-black border border-fuchsia-900/50 rounded-3xl p-8 h-full hover:border-fuchsia-500/50 transition-all">
-              <div className="absolute top-4 right-4 bg-fuchsia-500/20 text-fuchsia-300 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-fuchsia-500/30">
-                Próximamente
-              </div>
-              <Blocks className="w-12 h-12 text-fuchsia-400 mb-6" />
-              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-fuchsia-400 to-fuchsia-600 bg-clip-text text-transparent">IA Generativa</h3>
-              <p className="text-blue-100 mb-6">Creación de contenido y modelos generativos con tecnologías de última generación.</p>
-              <div className="flex items-center gap-4 text-sm text-blue-300">
-                <span>6 semanas</span>
-                <span>•</span>
-                <span>Portfolio</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Course 6 */}
-          <div className="group relative">
-            <div className="absolute inset-0.5 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-500"></div>
-            <div className="relative bg-gradient-to-b from-slate-900 to-black border border-emerald-900/50 rounded-3xl p-8 h-full hover:border-emerald-500/50 transition-all">
-              <div className="absolute top-4 right-4 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border border-emerald-500/30">
-                Próximamente
-              </div>
-              <Radar className="w-12 h-12 text-emerald-400 mb-6" />
-              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent">IA en Producción</h3>
-              <p className="text-blue-100 mb-6">Implementación y despliegue de modelos de IA en entornos productivos.</p>
-              <div className="flex items-center gap-4 text-sm text-blue-300">
-                <span>10 semanas</span>
-                <span>•</span>
-                <span>Proyecto real</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CursosGrid />
       </section>
 
       {/* Workflows Section */}

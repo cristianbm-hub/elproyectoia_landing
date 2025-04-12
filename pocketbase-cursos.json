@@ -1,0 +1,58 @@
+{
+  "cursos": [
+    {
+      "titulo": "Fundamentos de IA",
+      "descripcion": "Domina los conceptos básicos y principios fundamentales de la Inteligencia Artificial.",
+      "icono": "Bot",
+      "color": "from-blue-500 to-purple-500",
+      "duracion": "8 semanas",
+      "nivel": "Inicial",
+      "url": "https://cursos.elproyectoia.com/fundamentos-ia"
+    },
+    {
+      "titulo": "Resolver Problemas con IA",
+      "descripcion": "Aprende técnicas y herramientas para resolver problemas con IA en proyectos reales.",
+      "icono": "Cpu",
+      "color": "from-purple-500 to-pink-500",
+      "duracion": "12 semanas",
+      "nivel": "Proyectos prácticos",
+      "url": "https://cursos.elproyectoia.com/problemas-ia"
+    },
+    {
+      "titulo": "Automatizaciones",
+      "descripcion": "Aprende a automatizar tareas y procesos con IA para aumentar la eficiencia.",
+      "icono": "Network",
+      "color": "from-indigo-500 to-blue-500",
+      "duracion": "10 semanas",
+      "nivel": "Casos reales",
+      "url": ""
+    },
+    {
+      "titulo": "Data Science para IA",
+      "descripcion": "Análisis de datos y visualización para proyectos de Inteligencia Artificial.",
+      "icono": "LineChart",
+      "color": "from-cyan-500 to-blue-500",
+      "duracion": "8 semanas",
+      "nivel": "Casos prácticos",
+      "url": ""
+    },
+    {
+      "titulo": "IA Generativa",
+      "descripcion": "Creación de contenido y modelos generativos con tecnologías de última generación.",
+      "icono": "Blocks",
+      "color": "from-fuchsia-500 to-purple-500",
+      "duracion": "6 semanas",
+      "nivel": "Portfolio",
+      "url": ""
+    },
+    {
+      "titulo": "IA en Producción",
+      "descripcion": "Implementación y despliegue de modelos de IA en entornos productivos.",
+      "icono": "Radar",
+      "color": "from-emerald-500 to-cyan-500",
+      "duracion": "10 semanas",
+      "nivel": "Proyecto real",
+      "url": ""
+    }
+  ]
+} 

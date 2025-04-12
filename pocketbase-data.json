@@ -1,0 +1,28 @@
+{
+  "workflows_templates_n8n": [
+    {
+      "title": "Template de Transcripción de Audio",
+      "description": "Transcribe archivos de audio, resume con GPT-4 y almacena en Notion",
+      "downloadUrl": "/workflows/transcribe-audio-gpt-notion.json",
+      "color": "from-blue-500 to-indigo-600"
+    },
+    {
+      "title": "Template de Email Marketing",
+      "description": "Gestiona automáticamente tus campañas de email marketing y seguimiento.",
+      "downloadUrl": "",
+      "color": "from-purple-500 to-pink-600"
+    },
+    {
+      "title": "Template de Gestión de Tareas",
+      "description": "Automatiza la creación y seguimiento de tareas en tu equipo.",
+      "downloadUrl": "",
+      "color": ""
+    },
+    {
+      "title": "Template de Análisis de Datos",
+      "description": "Analiza datos de múltiples fuentes y genera reportes automáticos.",
+      "downloadUrl": "",
+      "color": ""
+    }
+  ]
+} 
