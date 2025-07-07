@@ -139,19 +139,24 @@ const ResourcesGrid: React.FC = () => {
       
       // Iniciar la descarga del archivo
       if (selectedResource) {
+        console.log('🔽 Iniciando descarga del recurso:', {
+          title: selectedResource.title,
+          downloadUrl: selectedResource.downloadUrl,
+          type: selectedResource.type
+        });
+
+        if (!selectedResource.downloadUrl || selectedResource.downloadUrl.trim() === '') {
+          console.error('❌ No hay URL de descarga disponible para este recurso');
+          alert('Este recurso no tiene un archivo disponible para descargar.');
+          return;
+        }
+
         // Crear un enlace y simular un clic para descargar el archivo
         const link = document.createElement('a');
         
-        // Obtener la URL directamente del objeto resource
+        // La URL ya viene procesada desde el servicio
         const downloadUrl = selectedResource.downloadUrl;
-        
-        // Verificar si es una URL absoluta o relativa
-        if (downloadUrl.startsWith('http://') || downloadUrl.startsWith('https://')) {
-          link.href = downloadUrl; // URL absoluta
-        } else {
-          // URL relativa - prefijo con origen de la web
-          link.href = downloadUrl.startsWith('/') ? downloadUrl : `/${downloadUrl}`;
-        }
+        link.href = downloadUrl;
         
         // Extraer el nombre del archivo de la URL
         const urlParts = downloadUrl.split('/');
@@ -159,16 +164,40 @@ const ResourcesGrid: React.FC = () => {
         
         // Si fileName está vacío o no tiene extensión, usar el título del recurso formateado
         if (!fileName || !fileName.includes('.')) {
-          fileName = selectedResource.title.replace(/\s+/g, '-').toLowerCase() + '.json';
+          // Intentar determinar la extensión basándose en el tipo de recurso
+          let extension = '.zip'; // Por defecto
+          if (selectedResource.type) {
+            switch (selectedResource.type.toLowerCase()) {
+              case 'template':
+              case 'plantilla':
+                extension = '.json';
+                break;
+              case 'guia':
+              case 'guía':
+                extension = '.pdf';
+                break;
+              case 'herramienta':
+                extension = '.zip';
+                break;
+              default:
+                extension = '.zip';
+            }
+          }
+          fileName = selectedResource.title.replace(/\s+/g, '-').toLowerCase() + extension;
         }
         
         link.download = fileName;
+        link.target = '_blank'; // Abrir en nueva pestaña como fallback
         
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         
-        console.log(`Descargando archivo desde: ${link.href}, con nombre: ${fileName}`);
+        console.log('✅ Descarga iniciada:', {
+          url: link.href,
+          fileName: fileName,
+          target: link.target
+        });
       }
       
       // Cerrar el modal

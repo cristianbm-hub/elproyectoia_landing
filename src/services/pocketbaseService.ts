@@ -17,7 +17,7 @@ export interface Resource {
 }
 
 // Mantenemos la interfaz Workflow para compatibilidad hacia atrás
-export interface Workflow extends Resource {}
+export type Workflow = Resource;
 
 export const resourceService = {
   // Obtener todos los recursos
@@ -29,13 +29,33 @@ export const resourceService = {
       
       // Procesar los records para asignar colores basados en el ID
       const processedResources = records.items.map(item => {
-        const hasDownloadUrl = item.downloadUrl && item.downloadUrl.trim() !== '';
+        // Construir la URL completa del archivo si existe
+        let downloadUrl = '';
+        if (item.downloadUrl && item.downloadUrl.trim() !== '') {
+          // Si es una URL absoluta, usarla directamente
+          if (item.downloadUrl.startsWith('http://') || item.downloadUrl.startsWith('https://')) {
+            downloadUrl = item.downloadUrl;
+          } else {
+            // Si es solo el nombre del archivo, construir la URL completa de PocketBase
+            downloadUrl = `${POCKETBASE_URL}/api/files/${COLLECTIONS.RECURSOS}/${item.id}/${item.downloadUrl}`;
+          }
+        }
+        
+        const hasDownloadUrl = downloadUrl !== '';
+        
+        console.log('📋 Procesando recurso:', {
+          id: item.id,
+          title: item.title,
+          downloadUrlOriginal: item.downloadUrl,
+          downloadUrlProcesada: downloadUrl,
+          hasDownloadUrl
+        });
         
         return {
           id: item.id,
           title: item.title,
           description: item.description,
-          downloadUrl: item.downloadUrl || '',
+          downloadUrl: downloadUrl,
           type: item.type || 'recurso',
           // Asignar color basado en el ID para consistencia, ignorando lo que viene de la API
           color: getColorForId(item.id),
