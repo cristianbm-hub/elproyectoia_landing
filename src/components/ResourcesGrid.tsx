@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { resourceService, Resource } from '../services/pocketbaseService';
-import { Download, FileText, Wrench, BookOpen, Cpu, Search, X } from 'lucide-react';
+import { Download, FileText, Wrench, BookOpen, Cpu, Search, X, ChevronDown } from 'lucide-react';
 
 // Función para obtener el icono apropiado según el tipo de recurso
 const getResourceIcon = (type?: string) => {
@@ -23,10 +23,16 @@ const getResourceIcon = (type?: string) => {
   }
 };
 
+// Tipos para ordenamiento y filtros
+type SortOption = 'relevance' | 'name-asc' | 'name-desc' | 'type';
+type FilterType = 'all' | 'template' | 'herramienta' | 'guia' | 'ia';
+
 const ResourcesGrid: React.FC = () => {
   const [resources, setResources] = useState<Resource[]>([]);
-  const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState<FilterType>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +42,15 @@ const ResourcesGrid: React.FC = () => {
   const [userName, setUserName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Debouncing para la búsqueda
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Cargar los recursos desde la API al montar el componente
   useEffect(() => {
     const fetchResources = async () => {
@@ -43,7 +58,6 @@ const ResourcesGrid: React.FC = () => {
       try {
         const data = await resourceService.getResources();
         setResources(data);
-        setFilteredResources(data);
         setError(null);
       } catch (error) {
         console.error('Error fetching resources:', error);
@@ -57,22 +71,137 @@ const ResourcesGrid: React.FC = () => {
     fetchResources();
   }, []);
 
-  // Filtrar recursos basado en el término de búsqueda
-  useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredResources(resources);
-    } else {
-      const filtered = resources.filter(resource =>
-        resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (resource.type && resource.type.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setFilteredResources(filtered);
+  // Función de búsqueda inteligente mejorada
+  const getSearchScore = useCallback((resource: Resource, searchTerms: string[]) => {
+    let score = 0;
+    const title = resource.title.toLowerCase();
+    const description = resource.description.toLowerCase();
+    const type = (resource.type || '').toLowerCase();
+
+    searchTerms.forEach(term => {
+      // Búsqueda exacta en título (mayor peso)
+      if (title.includes(term)) {
+        score += title === term ? 100 : title.startsWith(term) ? 50 : 20;
+      }
+      
+      // Búsqueda en descripción (peso medio)
+      if (description.includes(term)) {
+        score += description.startsWith(term) ? 15 : 10;
+      }
+      
+      // Búsqueda en tipo (peso menor)
+      if (type.includes(term)) {
+        score += type === term ? 30 : 15;
+      }
+
+      // Búsqueda flexible (términos similares)
+      const similarity = getStringSimilarity(term, title);
+      if (similarity > 0.6) {
+        score += similarity * 10;
+      }
+    });
+
+    return score;
+  }, []);
+
+  // Función para calcular similitud entre strings (algoritmo simple)
+  const getStringSimilarity = (a: string, b: string): number => {
+    const longer = a.length > b.length ? a : b;
+    const shorter = a.length > b.length ? b : a;
+    const editDistance = getEditDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  };
+
+  // Algoritmo de distancia de edición simplificado
+  const getEditDistance = (a: string, b: string): number => {
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
     }
-  }, [searchTerm, resources]);
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    return matrix[b.length][a.length];
+  };
+
+  // Obtener tipos únicos de recursos para filtros
+  const availableTypes = useMemo(() => {
+    const types = [...new Set(resources.map(r => r.type?.toLowerCase()).filter(Boolean))];
+    return types.map(type => ({
+      value: type as FilterType,
+      label: type === 'template' ? 'Plantillas' :
+             type === 'herramienta' ? 'Herramientas' :
+             type === 'guia' || type === 'guía' ? 'Guías' :
+             type === 'ia' ? 'IA' : type ? (type.charAt(0).toUpperCase() + type.slice(1)) : 'Otros',
+      count: resources.filter(r => r.type?.toLowerCase() === type).length
+    }));
+  }, [resources]);
+
+  // Filtrar y ordenar recursos con la lógica mejorada
+  const filteredAndSortedResources = useMemo(() => {
+    let filtered = resources;
+
+    // Filtrar por tipo
+    if (selectedType !== 'all') {
+      filtered = filtered.filter(resource => 
+        resource.type?.toLowerCase() === selectedType
+      );
+    }
+
+    // Aplicar búsqueda inteligente
+    if (debouncedSearchTerm.trim()) {
+      const searchTerms = debouncedSearchTerm.toLowerCase()
+        .split(' ')
+        .filter(term => term.length > 0);
+      
+      filtered = filtered
+        .map(resource => ({
+          resource,
+          score: getSearchScore(resource, searchTerms)
+        }))
+        .filter(({ score }) => score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(({ resource }) => resource);
+    }
+
+    // Aplicar ordenamiento
+    if (!debouncedSearchTerm.trim() || sortBy !== 'relevance') {
+      filtered.sort((a, b) => {
+        switch (sortBy) {
+          case 'name-asc':
+            return a.title.localeCompare(b.title);
+          case 'name-desc':
+            return b.title.localeCompare(a.title);
+          case 'type':
+            return (a.type || '').localeCompare(b.type || '');
+          case 'relevance':
+          default:
+            // Ya ordenado por relevancia si hay búsqueda
+            return 0;
+        }
+      });
+    }
+
+    return filtered;
+  }, [resources, debouncedSearchTerm, selectedType, sortBy, getSearchScore]);
 
   const clearSearch = () => {
     setSearchTerm('');
+    setDebouncedSearchTerm('');
+    setSelectedType('all');
   };
 
   const openDownloadModal = (resource: Resource) => {
@@ -258,26 +387,99 @@ const ResourcesGrid: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Barra de búsqueda */}
+      {/* Barra de búsqueda y filtros mejorada */}
       {!isLoading && resources.length > 0 && (
-        <div className="mb-8 max-w-md mx-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Buscar recursos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-10 py-3 bg-slate-800/80 border border-blue-900/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white transition-all backdrop-blur-sm"
-            />
-            {searchTerm && (
+        <div className="mb-8">
+          {/* Barra de búsqueda principal */}
+          <div className="max-w-2xl mx-auto mb-6">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar recursos por nombre, descripción o tipo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-12 py-4 bg-slate-800/80 border border-blue-900/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 text-white transition-all backdrop-blur-sm text-lg"
+              />
+              {searchTerm && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Controles de filtros y ordenamiento */}
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
+            {/* Filtros por tipo */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-blue-300 text-sm font-medium mr-2">Filtrar por tipo:</span>
               <button
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-white transition-colors"
+                onClick={() => setSelectedType('all')}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  selectedType === 'all'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-slate-800/50 text-blue-300 hover:bg-slate-700/50 border border-blue-900/30'
+                }`}
               >
-                <X className="w-5 h-5" />
+                Todos ({resources.length})
               </button>
-            )}
+              {availableTypes.map(({ value, label, count }) => (
+                <button
+                  key={value}
+                  onClick={() => setSelectedType(value)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    selectedType === value
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'bg-slate-800/50 text-blue-300 hover:bg-slate-700/50 border border-blue-900/30'
+                  }`}
+                >
+                  {label} ({count})
+                </button>
+              ))}
+            </div>
+
+            {/* Controles de ordenamiento */}
+            <div className="flex items-center gap-3">
+              <span className="text-blue-300 text-sm font-medium">Ordenar por:</span>
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className="appearance-none bg-slate-800/80 border border-blue-900/50 rounded-lg px-4 py-2 pr-8 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  {debouncedSearchTerm && <option value="relevance">Relevancia</option>}
+                  <option value="name-asc">Nombre (A-Z)</option>
+                  <option value="name-desc">Nombre (Z-A)</option>
+                  <option value="type">Tipo</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+
+          {/* Información de resultados */}
+          <div className="text-center mb-4">
+            <p className="text-blue-300 text-sm">
+                             {debouncedSearchTerm ? (
+                 <>
+                   Mostrando <span className="font-semibold text-blue-200">{filteredAndSortedResources.length}</span> resultados 
+                   {debouncedSearchTerm && <> para "<span className="font-semibold text-blue-200">{debouncedSearchTerm}</span>"</>}
+                   {selectedType !== 'all' && <> en <span className="font-semibold text-blue-200">{availableTypes.find(t => t.value === selectedType)?.label || selectedType}</span></>}
+                 </>
+               ) : (
+                 <>
+                   {selectedType === 'all' ? (
+                     <>Mostrando todos los <span className="font-semibold text-blue-200">{filteredAndSortedResources.length}</span> recursos</>
+                   ) : (
+                     <>Mostrando <span className="font-semibold text-blue-200">{filteredAndSortedResources.length}</span> recursos de tipo <span className="font-semibold text-blue-200">{availableTypes.find(t => t.value === selectedType)?.label || selectedType}</span></>
+                   )}
+                 </>
+               )}
+            </p>
           </div>
         </div>
       )}
@@ -293,25 +495,30 @@ const ResourcesGrid: React.FC = () => {
             </p>
           </div>
         </div>
-      ) : filteredResources.length === 0 && searchTerm ? (
+      ) : filteredAndSortedResources.length === 0 ? (
         <div className="flex justify-center items-center min-h-[300px] bg-blue-900/10 rounded-3xl border border-blue-900/30 backdrop-blur-sm">
           <div className="text-center p-8">
             <Search className="w-16 h-16 text-blue-500 mx-auto mb-6 opacity-50" />
             <p className="text-xl text-blue-300 mb-2">No se encontraron recursos</p>
             <p className="text-sm text-blue-400 max-w-md mb-4">
-              No hay recursos que coincidan con "{searchTerm}". Intenta con otros términos de búsqueda.
+              {debouncedSearchTerm ? (
+                <>No hay recursos que coincidan con "{debouncedSearchTerm}"{selectedType !== 'all' && ` en la categoría ${availableTypes.find(t => t.value === selectedType)?.label}`}.</>
+              ) : (
+                <>No hay recursos disponibles en la categoría seleccionada.</>
+              )}
+              <br />Intenta con otros términos de búsqueda o cambia los filtros.
             </p>
             <button
               onClick={clearSearch}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
-              Limpiar búsqueda
+              Limpiar filtros
             </button>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredResources.map((resource) => (
+          {filteredAndSortedResources.map((resource) => (
             <div key={resource.id} 
                 className="group relative">
               <div className={`absolute inset-0.5 bg-gradient-to-r ${resource.color} rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-500`}></div>
@@ -320,11 +527,18 @@ const ResourcesGrid: React.FC = () => {
                   <div className={`mr-4 bg-gradient-to-br ${resource.color} rounded-xl p-3 bg-opacity-20 backdrop-blur-sm flex items-center justify-center w-12 h-12`}>
                     {getResourceIcon(resource.type)}
                   </div>
-                  <h3 className={`text-2xl font-bold bg-gradient-to-r ${resource.color} bg-clip-text text-transparent`}>
-                    {resource.title}
-                  </h3>
+                  <div className="flex-1">
+                    <h3 className={`text-xl font-bold bg-gradient-to-r ${resource.color} bg-clip-text text-transparent mb-1`}>
+                      {resource.title}
+                    </h3>
+                    {resource.type && (
+                      <span className="text-xs text-blue-400 bg-blue-900/30 px-2 py-1 rounded-full">
+                        {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <p className="text-blue-100 mb-8">{resource.description}</p>
+                <p className="text-blue-100 mb-8 text-sm leading-relaxed">{resource.description}</p>
                 {resource.proximamente ? (
                   <button 
                     disabled
@@ -340,6 +554,7 @@ const ResourcesGrid: React.FC = () => {
                     className={`group bg-gradient-to-r ${resource.color} relative px-6 py-3 rounded-full text-white font-semibold transition-all hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] overflow-hidden w-full`}
                   >
                     <span className="relative z-10 flex items-center justify-center">
+                      <Download className="w-4 h-4 mr-2" />
                       Descargar
                     </span>
                     <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
