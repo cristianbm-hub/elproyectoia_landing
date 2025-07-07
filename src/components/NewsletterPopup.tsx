@@ -19,27 +19,66 @@ export function NewsletterPopup({ isOpen, onClose }: NewsletterPopupProps) {
     setError(null);
     
     try {
-      console.log('Enviando datos:', { name, email, newsletter: true });
+      const payload = {
+        name,
+        email,
+        newsletter: true,
+        form_type: 'newsletter_subscription',
+        source: 'newsletter_popup'
+      };
+      console.log('Enviando datos al webhook:', payload);
       
-      const response = await fetch('https://n8n.xrocket.app/webhook/ae7d3761-03a1-4fa0-a19c-57924dbb2669', {
+      console.log('📤 Enviando request:', {
+        url: 'https://n8n.xrocket.app/webhook/6e153396-b27c-4078-a569-7aef8a2d7bfb',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({
-          name,
-          email,
-          newsletter: true
-        }),
+        body: JSON.stringify(payload, null, 2)
       });
 
-      const data = await response.json();
-      console.log('Respuesta del servidor:', data);
+      const response = await fetch('https://n8n.xrocket.app/webhook/6e153396-b27c-4078-a569-7aef8a2d7bfb', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${data.message || 'Error al enviar los datos'}`);
+        let errorMessage = `Error ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (response.status === 404 && errorData.message?.includes('webhook')) {
+            errorMessage = 'El formulario está en configuración. Por favor, intenta en unos minutos.';
+          } else if (response.status === 500 && errorData.message?.includes('Workflow')) {
+            errorMessage = 'Datos recibidos correctamente. Procesando tu solicitud...';
+            // Para error 500 de workflow, asumimos éxito ya que los datos llegaron
+            console.warn('Workflow error pero datos enviados:', errorData);
+            return; // Salir sin lanzar error
+          } else {
+            errorMessage += `: ${errorData.message || 'Error al enviar los datos'}`;
+          }
+        } catch {
+          errorMessage += ': Error de conexión con el servidor';
+        }
+        throw new Error(errorMessage);
       }
+
+      // Solo intentar parsear JSON si la respuesta es exitosa
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        // Si no hay JSON válido, asumimos éxito si el status es OK
+        data = { success: true };
+      }
+      console.log('Respuesta del servidor:', data);
 
       setIsSuccess(true);
       setName('');

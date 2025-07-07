@@ -1,39 +1,82 @@
 import React, { useState, useEffect } from 'react';
-import { workflowService, Workflow } from '../services/pocketbaseService';
+import { resourceService, Resource } from '../services/pocketbaseService';
+import { Download, FileText, Wrench, BookOpen, Cpu, Search, X } from 'lucide-react';
 
-const WorkflowGrid: React.FC = () => {
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+// Función para obtener el icono apropiado según el tipo de recurso
+const getResourceIcon = (type?: string) => {
+  switch (type?.toLowerCase()) {
+    case 'template':
+    case 'plantilla':
+      return <FileText className="w-8 h-8 text-white" />;
+    case 'herramienta':
+    case 'tool':
+      return <Wrench className="w-8 h-8 text-white" />;
+    case 'guia':
+    case 'guía':
+    case 'guide':
+      return <BookOpen className="w-8 h-8 text-white" />;
+    case 'ia':
+    case 'ai':
+      return <Cpu className="w-8 h-8 text-white" />;
+    default:
+      return <Download className="w-8 h-8 text-white" />;
+  }
+};
+
+const ResourcesGrid: React.FC = () => {
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Cargar los workflows desde la API al montar el componente
+  // Cargar los recursos desde la API al montar el componente
   useEffect(() => {
-    const fetchWorkflows = async () => {
+    const fetchResources = async () => {
       setIsLoading(true);
       try {
-        const data = await workflowService.getWorkflows();
-        setWorkflows(data);
+        const data = await resourceService.getResources();
+        setResources(data);
+        setFilteredResources(data);
         setError(null);
       } catch (error) {
-        console.error('Error fetching workflows:', error);
-        setError('No se pudieron cargar los templates. Por favor, intenta más tarde.');
+        console.error('Error fetching resources:', error);
+        setError('No se pudieron cargar los recursos. Por favor, intenta más tarde.');
       } finally {
         setIsLoading(false);
         setIsInitialLoad(false);
       }
     };
 
-    fetchWorkflows();
+    fetchResources();
   }, []);
 
-  const openDownloadModal = (workflow: Workflow) => {
-    setSelectedWorkflow(workflow);
+  // Filtrar recursos basado en el término de búsqueda
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredResources(resources);
+    } else {
+      const filtered = resources.filter(resource =>
+        resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (resource.type && resource.type.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredResources(filtered);
+    }
+  }, [searchTerm, resources]);
+
+  const clearSearch = () => {
+    setSearchTerm('');
+  };
+
+  const openDownloadModal = (resource: Resource) => {
+    setSelectedResource(resource);
     setShowModal(true);
   };
 
@@ -51,9 +94,10 @@ const WorkflowGrid: React.FC = () => {
       const payload = {
         name: userName,
         email: userEmail,
-        template: selectedWorkflow?.title,
-        form_type: 'template_download',
-        source: 'workflows_section'
+        resource: selectedResource?.title,
+        resource_type: selectedResource?.type || 'recurso',
+        form_type: 'resource_download',
+        source: 'resources_section'
       };
 
       console.log('📤 Enviando request al webhook:', {
@@ -94,12 +138,12 @@ const WorkflowGrid: React.FC = () => {
       }
       
       // Iniciar la descarga del archivo
-      if (selectedWorkflow) {
+      if (selectedResource) {
         // Crear un enlace y simular un clic para descargar el archivo
         const link = document.createElement('a');
         
-        // Obtener la URL directamente del objeto workflow
-        const downloadUrl = selectedWorkflow.downloadUrl;
+        // Obtener la URL directamente del objeto resource
+        const downloadUrl = selectedResource.downloadUrl;
         
         // Verificar si es una URL absoluta o relativa
         if (downloadUrl.startsWith('http://') || downloadUrl.startsWith('https://')) {
@@ -113,9 +157,9 @@ const WorkflowGrid: React.FC = () => {
         const urlParts = downloadUrl.split('/');
         let fileName = urlParts[urlParts.length - 1];
         
-        // Si fileName está vacío o no tiene extensión, usar el título del workflow formateado
+        // Si fileName está vacío o no tiene extensión, usar el título del recurso formateado
         if (!fileName || !fileName.includes('.')) {
-          fileName = selectedWorkflow.title.replace(/\s+/g, '-').toLowerCase() + '.json';
+          fileName = selectedResource.title.replace(/\s+/g, '-').toLowerCase() + '.json';
         }
         
         link.download = fileName;
@@ -131,7 +175,7 @@ const WorkflowGrid: React.FC = () => {
       setShowModal(false);
       setUserEmail('');
       setUserName('');
-      setSelectedWorkflow(null);
+      setSelectedResource(null);
     } catch (error) {
       console.error('Error:', error);
       alert('Hubo un error al procesar tu solicitud. Por favor, intenta nuevamente.');
@@ -185,40 +229,74 @@ const WorkflowGrid: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Grid de templates */}
-      {!isLoading && workflows.length === 0 ? (
+      {/* Barra de búsqueda */}
+      {!isLoading && resources.length > 0 && (
+        <div className="mb-8 max-w-md mx-auto">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Buscar recursos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-10 py-3 bg-slate-800/80 border border-blue-900/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white transition-all backdrop-blur-sm"
+            />
+            {searchTerm && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Grid de recursos */}
+      {!isLoading && resources.length === 0 ? (
         <div className="flex justify-center items-center min-h-[300px] bg-blue-900/10 rounded-3xl border border-blue-900/30 backdrop-blur-sm">
           <div className="text-center p-8">
-            <svg viewBox="0 0 24 24" className="w-16 h-16 text-blue-500 mx-auto mb-6 opacity-50" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 4L8 8H3V16H8L12 20L16 16H21V8H16L12 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
-            </svg>
-            <p className="text-xl text-blue-300 mb-2">No hay templates disponibles</p>
+            <Download className="w-16 h-16 text-blue-500 mx-auto mb-6 opacity-50" />
+            <p className="text-xl text-blue-300 mb-2">No hay recursos disponibles</p>
             <p className="text-sm text-blue-400 max-w-md">
-              En estos momentos no hay templates publicados. ¡Vuelve pronto para ver nuestras novedades!
+              En estos momentos no hay recursos publicados. ¡Vuelve pronto para ver nuestras novedades!
             </p>
+          </div>
+        </div>
+      ) : filteredResources.length === 0 && searchTerm ? (
+        <div className="flex justify-center items-center min-h-[300px] bg-blue-900/10 rounded-3xl border border-blue-900/30 backdrop-blur-sm">
+          <div className="text-center p-8">
+            <Search className="w-16 h-16 text-blue-500 mx-auto mb-6 opacity-50" />
+            <p className="text-xl text-blue-300 mb-2">No se encontraron recursos</p>
+            <p className="text-sm text-blue-400 max-w-md mb-4">
+              No hay recursos que coincidan con "{searchTerm}". Intenta con otros términos de búsqueda.
+            </p>
+            <button
+              onClick={clearSearch}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Limpiar búsqueda
+            </button>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {workflows.map((workflow) => (
-            <div key={workflow.id} 
+          {filteredResources.map((resource) => (
+            <div key={resource.id} 
                 className="group relative">
-              <div className={`absolute inset-0.5 bg-gradient-to-r ${workflow.color} rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-500`}></div>
+              <div className={`absolute inset-0.5 bg-gradient-to-r ${resource.color} rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-500`}></div>
               <div className="relative bg-gradient-to-b from-slate-900 to-black rounded-3xl p-8 h-full border border-blue-900/50 hover:border-blue-500/20 transition-all hover:shadow-[0_0_50px_rgba(37,99,235,0.3)] backdrop-blur-sm">
                 <div className="flex items-center mb-6">
-                  <div className={`mr-4 bg-gradient-to-br ${workflow.color} rounded-xl p-3 bg-opacity-20 backdrop-blur-sm flex items-center justify-center w-12 h-12`}>
-                    <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 4L8 8H3V16H8L12 20L16 16H21V8H16L12 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
+                  <div className={`mr-4 bg-gradient-to-br ${resource.color} rounded-xl p-3 bg-opacity-20 backdrop-blur-sm flex items-center justify-center w-12 h-12`}>
+                    {getResourceIcon(resource.type)}
                   </div>
-                  <h3 className={`text-2xl font-bold bg-gradient-to-r ${workflow.color} bg-clip-text text-transparent`}>
-                    {workflow.title}
+                  <h3 className={`text-2xl font-bold bg-gradient-to-r ${resource.color} bg-clip-text text-transparent`}>
+                    {resource.title}
                   </h3>
                 </div>
-                <p className="text-blue-100 mb-8">{workflow.description}</p>
-                {workflow.proximamente ? (
+                <p className="text-blue-100 mb-8">{resource.description}</p>
+                {resource.proximamente ? (
                   <button 
                     disabled
                     className="group bg-gradient-to-r from-gray-600 to-gray-700 relative px-6 py-3 rounded-full text-white font-semibold transition-all opacity-80 w-full cursor-not-allowed"
@@ -229,8 +307,8 @@ const WorkflowGrid: React.FC = () => {
                   </button>
                 ) : (
                   <button 
-                    onClick={() => openDownloadModal(workflow)}
-                    className={`group bg-gradient-to-r ${workflow.color} relative px-6 py-3 rounded-full text-white font-semibold transition-all hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] overflow-hidden w-full`}
+                    onClick={() => openDownloadModal(resource)}
+                    className={`group bg-gradient-to-r ${resource.color} relative px-6 py-3 rounded-full text-white font-semibold transition-all hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] overflow-hidden w-full`}
                   >
                     <span className="relative z-10 flex items-center justify-center">
                       Descargar
@@ -259,24 +337,21 @@ const WorkflowGrid: React.FC = () => {
             
             <div className="p-8">
               <div className="flex items-center mb-6">
-                {selectedWorkflow && (
-                  <div className={`mr-4 bg-gradient-to-br ${selectedWorkflow.color} rounded-xl p-3 bg-opacity-20 backdrop-blur-sm flex items-center justify-center w-12 h-12`}>
-                    <svg viewBox="0 0 24 24" className="w-8 h-8 text-white" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 4L8 8H3V16H8L12 20L16 16H21V8H16L12 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
+                {selectedResource && (
+                  <div className={`mr-4 bg-gradient-to-br ${selectedResource.color} rounded-xl p-3 bg-opacity-20 backdrop-blur-sm flex items-center justify-center w-12 h-12`}>
+                    {getResourceIcon(selectedResource.type)}
                   </div>
                 )}
                 <div>
                   <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                    Descargar Template
+                    Descargar Recurso
                   </h3>
-                  <p className="text-blue-300 mt-1">{selectedWorkflow?.title}</p>
+                  <p className="text-blue-300 mt-1">{selectedResource?.title}</p>
                 </div>
               </div>
               
               <p className="text-blue-100 mb-6 bg-blue-900/20 p-4 rounded-xl border border-blue-900/50">
-                Para descargar este template de n8n, por favor proporciona tu información de contacto:
+                Para descargar este recurso, por favor proporciona tu información de contacto:
               </p>
               
               <div className="space-y-4">
@@ -337,4 +412,4 @@ const WorkflowGrid: React.FC = () => {
   );
 };
 
-export default WorkflowGrid; 
+export default ResourcesGrid; 
