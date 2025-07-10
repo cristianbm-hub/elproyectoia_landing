@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Brain, Users, Lightbulb, ArrowRight, Sparkles, CircuitBoard, GraduationCap, Youtube, Instagram } from 'lucide-react';
 import { NewsletterPopup } from './components/NewsletterPopup';
+import { MinimalNavigation } from './components/MinimalNavigation';
 import ResourcesGrid from './components/ResourcesGrid';
 import CursosGrid from './components/CursosGrid';
 
@@ -9,6 +10,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-slate-900 to-black text-white relative overflow-x-hidden">
+      {/* Minimal Navigation */}
+      <MinimalNavigation onNewsletterOpen={() => setIsNewsletterOpen(true)} />
+      
       {/* Newsletter Popup */}
       <NewsletterPopup 
         isOpen={isNewsletterOpen} 
@@ -27,7 +31,7 @@ function App() {
 
       <main>
         {/* Hero Section */}
-        <header className="container mx-auto px-4 py-32 relative">
+        <header id="inicio" className="container mx-auto px-4 py-32 relative">
           <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-900/10 rounded-full blur-3xl" aria-hidden="true"></div>
           <div className="relative flex flex-col items-center text-center">
             <div className="relative mb-8" aria-hidden="true">
