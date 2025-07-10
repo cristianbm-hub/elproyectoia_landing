@@ -71,6 +71,39 @@ const ResourcesGrid: React.FC = () => {
     fetchResources();
   }, []);
 
+  // Algoritmo de distancia de edición simplificado
+  const getEditDistance = useCallback((a: string, b: string): number => {
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
+    }
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    return matrix[b.length][a.length];
+  }, []);
+
+  // Función para calcular similitud entre strings (algoritmo simple)
+  const getStringSimilarity = useCallback((a: string, b: string): number => {
+    const longer = a.length > b.length ? a : b;
+    const shorter = a.length > b.length ? b : a;
+    const editDistance = getEditDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  }, [getEditDistance]);
+
   // Función de búsqueda inteligente mejorada
   const getSearchScore = useCallback((resource: Resource, searchTerms: string[]) => {
     let score = 0;
@@ -102,40 +135,7 @@ const ResourcesGrid: React.FC = () => {
     });
 
     return score;
-  }, []);
-
-  // Función para calcular similitud entre strings (algoritmo simple)
-  const getStringSimilarity = (a: string, b: string): number => {
-    const longer = a.length > b.length ? a : b;
-    const shorter = a.length > b.length ? b : a;
-    const editDistance = getEditDistance(longer, shorter);
-    return (longer.length - editDistance) / longer.length;
-  };
-
-  // Algoritmo de distancia de edición simplificado
-  const getEditDistance = (a: string, b: string): number => {
-    const matrix = [];
-    for (let i = 0; i <= b.length; i++) {
-      matrix[i] = [i];
-    }
-    for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j;
-    }
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
-      }
-    }
-    return matrix[b.length][a.length];
-  };
+  }, [getStringSimilarity]);
 
   // Obtener tipos únicos de recursos para filtros
   const availableTypes = useMemo(() => {
