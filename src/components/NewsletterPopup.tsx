@@ -101,11 +101,6 @@ export function NewsletterPopup({ isOpen, onClose }: NewsletterPopupProps) {
       setIsSuccess(true);
       setName('');
       setEmail('');
-      
-      // Cerrar el popup después de 4 segundos para dar tiempo a ver la invitación de WhatsApp
-      setTimeout(() => {
-        onClose();
-      }, 4000);
     } catch (error) {
       console.error('Error detallado:', error);
       setError(error instanceof Error ? error.message : 'Hubo un error al enviar los datos. Por favor, intenta de nuevo.');
