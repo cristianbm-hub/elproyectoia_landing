@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Brain, Menu, X } from 'lucide-react';
+import { Brain, Menu, X, MessageCircle } from 'lucide-react';
 
 interface MinimalNavigationProps {
   onNewsletterOpen: () => void;
@@ -30,6 +30,11 @@ export const MinimalNavigation: React.FC<MinimalNavigationProps> = ({ onNewslett
     }
     setIsMobileMenuOpen(false);
   }, []);
+
+  const handleWhatsAppJoin = () => {
+    window.open('https://whatsapp.com/channel/0029VbAm1y9CsU9OC8QY9X0t', '_blank');
+    setIsMobileMenuOpen(false);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -102,7 +107,7 @@ export const MinimalNavigation: React.FC<MinimalNavigationProps> = ({ onNewslett
               </button>
 
               {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center gap-8">
+              <div className="hidden md:flex items-center gap-6">
                 <button
                   onClick={() => scrollToSection('cursos')}
                   className="text-white/70 hover:text-white text-sm font-medium transition-all duration-300 hover:scale-105 relative group"
@@ -118,6 +123,14 @@ export const MinimalNavigation: React.FC<MinimalNavigationProps> = ({ onNewslett
                 >
                   Recursos
                   <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300" />
+                </button>
+                <button
+                  onClick={handleWhatsAppJoin}
+                  className="flex items-center gap-2 bg-gradient-to-r from-green-600/80 to-green-700/80 backdrop-blur-sm px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 hover:from-green-500/90 hover:to-green-600/90 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+                  aria-label="Unirse al canal de WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  WhatsApp
                 </button>
                 <button
                   onClick={onNewsletterOpen}
@@ -181,6 +194,13 @@ export const MinimalNavigation: React.FC<MinimalNavigationProps> = ({ onNewslett
               className="block w-full text-left py-3 px-4 rounded-xl text-white/80 hover:text-white hover:bg-white/5 transition-all duration-300"
             >
               Recursos
+            </button>
+            <button
+              onClick={handleWhatsAppJoin}
+              className="flex items-center gap-2 w-full text-left py-3 px-4 rounded-xl bg-gradient-to-r from-green-600/20 to-green-700/20 text-green-300 hover:from-green-600/30 hover:to-green-700/30 transition-all duration-300 border border-green-500/20"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Canal de WhatsApp
             </button>
             <button
               onClick={() => {

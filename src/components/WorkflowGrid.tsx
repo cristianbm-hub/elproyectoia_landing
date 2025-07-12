@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { workflowService, Workflow } from '../services/pocketbaseService';
+import { userDataService } from '../services/userDataService';
 
 const WorkflowGrid: React.FC = () => {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
@@ -34,6 +35,14 @@ const WorkflowGrid: React.FC = () => {
 
   const openDownloadModal = (workflow: Workflow) => {
     setSelectedWorkflow(workflow);
+    
+    // Cargar automáticamente los datos del usuario si ya los ha proporcionado
+    const userData = userDataService.getUserData();
+    if (userData) {
+      setUserName(userData.name);
+      setUserEmail(userData.email);
+    }
+    
     setShowModal(true);
   };
 
@@ -126,6 +135,12 @@ const WorkflowGrid: React.FC = () => {
         
         console.log(`Descargando archivo desde: ${link.href}, con nombre: ${fileName}`);
       }
+      
+      // Guardar los datos del usuario para futuras descargas
+      userDataService.saveUserData({
+        name: userName,
+        email: userEmail
+      });
       
       // Cerrar el modal
       setShowModal(false);

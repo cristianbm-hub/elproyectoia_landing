@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { resourceService, Resource } from '../services/pocketbaseService';
+import { userDataService } from '../services/userDataService';
 import { Download, FileText, Wrench, BookOpen, Cpu, Search, X, ChevronDown } from 'lucide-react';
 
 // Función para obtener el icono apropiado según el tipo de recurso
@@ -206,6 +207,14 @@ const ResourcesGrid: React.FC = () => {
 
   const openDownloadModal = (resource: Resource) => {
     setSelectedResource(resource);
+    
+    // Cargar automáticamente los datos del usuario si ya los ha proporcionado
+    const userData = userDataService.getUserData();
+    if (userData) {
+      setUserName(userData.name);
+      setUserEmail(userData.email);
+    }
+    
     setShowModal(true);
   };
 
@@ -328,6 +337,12 @@ const ResourcesGrid: React.FC = () => {
           target: link.target
         });
       }
+      
+      // Guardar los datos del usuario para futuras descargas
+      userDataService.saveUserData({
+        name: userName,
+        email: userEmail
+      });
       
       // Cerrar el modal
       setShowModal(false);
@@ -521,45 +536,69 @@ const ResourcesGrid: React.FC = () => {
           {filteredAndSortedResources.map((resource) => (
             <div key={resource.id} 
                 className="group relative">
-              <div className={`absolute inset-0.5 bg-gradient-to-r ${resource.color} rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-500`}></div>
-              <div className="relative bg-gradient-to-b from-slate-900 to-black rounded-3xl p-8 h-full border border-blue-900/50 hover:border-blue-500/20 transition-all hover:shadow-[0_0_50px_rgba(37,99,235,0.3)] backdrop-blur-sm">
-                <div className="flex items-center mb-6">
-                  <div className={`mr-4 bg-gradient-to-br ${resource.color} rounded-xl p-3 bg-opacity-20 backdrop-blur-sm flex items-center justify-center w-12 h-12`}>
-                    {getResourceIcon(resource.type)}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className={`text-xl font-bold bg-gradient-to-r ${resource.color} bg-clip-text text-transparent mb-1`}>
-                      {resource.title}
-                    </h3>
-                    {resource.type && (
-                      <span className="text-xs text-blue-400 bg-blue-900/30 px-2 py-1 rounded-full">
-                        {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
-                      </span>
-                    )}
+              {/* Glow effect sutil pero potente */}
+              <div className={`absolute -inset-0.5 bg-gradient-to-r ${resource.color} rounded-[2rem] blur-lg opacity-0 group-hover:opacity-40 transition-all duration-700`}></div>
+              
+              {/* Card principal premium */}
+              <div className="relative bg-gradient-to-br from-white/[0.07] to-white/[0.02] backdrop-blur-2xl rounded-[2rem] border border-white/10 group-hover:border-white/20 transition-all duration-500 overflow-hidden h-full flex flex-col">
+                {/* Fondo con patrón sutil */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)] opacity-50"></div>
+                
+                {/* Header elegante */}
+                <div className="relative p-8 pb-0">
+                  <div className="flex items-start space-x-4">
+                    <div className={`relative bg-gradient-to-br ${resource.color} rounded-2xl p-4 shadow-2xl w-14 h-14 flex items-center justify-center`}>
+                      <div className="absolute inset-0 bg-white/20 rounded-2xl"></div>
+                      <div className="relative">
+                        {getResourceIcon(resource.type)}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold text-white mb-2 leading-tight">
+                        {resource.title}
+                      </h3>
+                      {resource.type && (
+                        <span className="inline-flex items-center text-xs font-medium text-slate-300 bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full border border-white/20">
+                          {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <p className="text-blue-100 mb-8 text-sm leading-relaxed">{resource.description}</p>
-                {resource.proximamente ? (
-                  <button 
-                    disabled
-                    className="group bg-gradient-to-r from-gray-600 to-gray-700 relative px-6 py-3 rounded-full text-white font-semibold transition-all opacity-80 w-full cursor-not-allowed"
-                  >
-                    <span className="relative z-10 flex items-center justify-center">
+                
+                {/* Descripción con mejor espaciado */}
+                <div className="relative px-8 py-6 flex-grow">
+                  <p className="text-slate-300 text-sm leading-relaxed">
+                    {resource.description}
+                  </p>
+                </div>
+                
+                {/* Botón premium minimalista */}
+                <div className="relative p-8 pt-0">
+                  {resource.proximamente ? (
+                    <button 
+                      disabled
+                      className="w-full bg-white/5 border border-white/10 text-white/50 font-medium py-4 px-6 rounded-xl transition-all duration-300 cursor-not-allowed"
+                    >
                       Próximamente
-                    </span>
-                  </button>
-                ) : (
-                  <button 
-                    onClick={() => openDownloadModal(resource)}
-                    className={`group bg-gradient-to-r ${resource.color} relative px-6 py-3 rounded-full text-white font-semibold transition-all hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] overflow-hidden w-full`}
-                  >
-                    <span className="relative z-10 flex items-center justify-center">
-                      <Download className="w-4 h-4 mr-2" />
-                      Descargar
-                    </span>
-                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
-                  </button>
-                )}
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => openDownloadModal(resource)}
+                      className={`group/btn relative w-full bg-gradient-to-r ${resource.color} text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 overflow-hidden`}
+                    >
+                      {/* Efecto de brillo al hover */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 ease-out"></div>
+                      <span className="relative flex items-center justify-center gap-2">
+                        <Download className="w-4 h-4" />
+                        Descargar
+                      </span>
+                    </button>
+                  )}
+                </div>
+                
+                {/* Línea decorativa inferior */}
+                <div className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               </div>
             </div>
           ))}

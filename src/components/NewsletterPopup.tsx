@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Mail, Sparkles, ArrowRight, User, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Mail, Sparkles, ArrowRight, User, AlertCircle, MessageCircle } from 'lucide-react';
+import { userDataService } from '../services/userDataService';
 
 interface NewsletterPopupProps {
   isOpen: boolean;
@@ -12,6 +13,17 @@ export function NewsletterPopup({ isOpen, onClose }: NewsletterPopupProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Cargar datos del usuario cuando se abra el popup
+  useEffect(() => {
+    if (isOpen) {
+      const userData = userDataService.getUserData();
+      if (userData) {
+        setName(userData.name);
+        setEmail(userData.email);
+      }
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,20 +92,30 @@ export function NewsletterPopup({ isOpen, onClose }: NewsletterPopupProps) {
       }
       console.log('Respuesta del servidor:', data);
 
+      // Guardar los datos del usuario para futuros formularios
+      userDataService.saveUserData({
+        name,
+        email
+      });
+      
       setIsSuccess(true);
       setName('');
       setEmail('');
       
-      // Cerrar el popup después de 2 segundos
+      // Cerrar el popup después de 4 segundos para dar tiempo a ver la invitación de WhatsApp
       setTimeout(() => {
         onClose();
-      }, 2000);
+      }, 4000);
     } catch (error) {
       console.error('Error detallado:', error);
       setError(error instanceof Error ? error.message : 'Hubo un error al enviar los datos. Por favor, intenta de nuevo.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleWhatsAppJoin = () => {
+    window.open('https://whatsapp.com/channel/0029VbAm1y9CsU9OC8QY9X0t', '_blank');
   };
 
   if (!isOpen) return null;
@@ -187,7 +209,28 @@ export function NewsletterPopup({ isOpen, onClose }: NewsletterPopupProps) {
                 </svg>
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-green-400 mb-1 sm:mb-2">¡Gracias por unirte!</h3>
-              <p className="text-sm sm:text-base text-blue-100">Pronto recibirás nuestras novedades.</p>
+              <p className="text-sm sm:text-base text-blue-100 mb-4 sm:mb-6">Pronto recibirás nuestras novedades.</p>
+              
+              {/* Invitación al canal de WhatsApp */}
+              <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-green-900/20 to-green-800/20 border border-green-500/30 rounded-xl">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
+                  <h4 className="text-base sm:text-lg font-semibold text-green-400">
+                    ¡Un paso más!
+                  </h4>
+                </div>
+                <p className="text-sm sm:text-base text-green-100 mb-3 sm:mb-4">
+                  Únete a nuestro canal de WhatsApp donde compartimos recursos exclusivos, tips y novedades que no encontrarás en ningún otro lugar.
+                </p>
+                <button
+                  onClick={handleWhatsAppJoin}
+                  className="group w-full bg-gradient-to-r from-green-600 to-green-700 px-4 sm:px-6 py-2 sm:py-3 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 sm:gap-3 transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] hover:from-green-500 hover:to-green-600"
+                >
+                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Unirse al canal de WhatsApp
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
             </div>
           )}
         </div>
