@@ -104,18 +104,80 @@ const WorkflowGrid: React.FC = () => {
       
       // Iniciar la descarga del archivo
       if (selectedWorkflow) {
-        // Crear un enlace y simular un clic para descargar el archivo
-        const link = document.createElement('a');
-        
+        console.log('🔽 Iniciando descarga del workflow:', {
+          title: selectedWorkflow.title,
+          downloadUrl: selectedWorkflow.downloadUrl
+        });
+
+        // Función mejorada para descargas que funciona en móviles
+        const downloadFile = (url: string, filename: string) => {
+          console.log('🔽 Intentando descarga:', { url, filename });
+          
+          // Detectar si es un dispositivo móvil
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          
+          if (isMobile) {
+            // En móviles, abrir el archivo en una nueva ventana/pestaña
+            // El navegador decidirá si descarga o abre el archivo
+            console.log('📱 Dispositivo móvil detectado, usando window.open()');
+            const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+            
+            if (!newWindow) {
+              // Si se bloquea el popup, mostrar un mensaje con enlace directo
+              console.log('🚫 Popup bloqueado, mostrando enlace directo');
+              const userConfirmed = confirm(
+                `Para descargar el template en tu dispositivo móvil, presiona OK para abrir el enlace de descarga.\n\nSi no se descarga automáticamente, mantén presionado el enlace y selecciona "Descargar" o "Guardar".`
+              );
+              if (userConfirmed) {
+                window.location.href = url;
+              }
+              return;
+            }
+            
+            // Para iOS Safari, también intentamos iniciar la descarga directamente
+            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+              setTimeout(() => {
+                window.location.href = url;
+              }, 100);
+            }
+          } else {
+            // En desktop, usar el método tradicional mejorado
+            console.log('💻 Dispositivo desktop detectado, usando elemento <a>');
+            try {
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = filename;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              
+              // Asegurar que el elemento esté en el DOM temporalmente
+              document.body.appendChild(link);
+              
+              // Iniciar la descarga
+              link.click();
+              
+              // Limpiar el elemento
+              document.body.removeChild(link);
+              
+              console.log('✅ Descarga iniciada en desktop');
+            } catch (error) {
+              console.error('❌ Error en descarga desktop, usando fallback:', error);
+              // Fallback: abrir en nueva ventana
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }
+          }
+        };
+
         // Obtener la URL directamente del objeto workflow
         const downloadUrl = selectedWorkflow.downloadUrl;
+        let finalUrl = downloadUrl;
         
         // Verificar si es una URL absoluta o relativa
-        if (downloadUrl.startsWith('http://') || downloadUrl.startsWith('https://')) {
-          link.href = downloadUrl; // URL absoluta
-        } else {
-          // URL relativa - prefijo con origen de la web
-          link.href = downloadUrl.startsWith('/') ? downloadUrl : `/${downloadUrl}`;
+        if (!downloadUrl.startsWith('http://') && !downloadUrl.startsWith('https://')) {
+          // URL relativa - construir la URL completa
+          finalUrl = downloadUrl.startsWith('/') ? 
+            `${window.location.origin}${downloadUrl}` : 
+            `${window.location.origin}/${downloadUrl}`;
         }
         
         // Extraer el nombre del archivo de la URL
@@ -127,13 +189,15 @@ const WorkflowGrid: React.FC = () => {
           fileName = selectedWorkflow.title.replace(/\s+/g, '-').toLowerCase() + '.json';
         }
         
-        link.download = fileName;
+        // Iniciar la descarga usando la función mejorada
+        downloadFile(finalUrl, fileName);
         
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        console.log(`Descargando archivo desde: ${link.href}, con nombre: ${fileName}`);
+        console.log('✅ Proceso de descarga completado:', {
+          originalUrl: downloadUrl,
+          finalUrl: finalUrl,
+          fileName: fileName,
+          isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        });
       }
       
       // Guardar los datos del usuario para futuras descargas

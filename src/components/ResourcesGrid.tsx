@@ -289,12 +289,67 @@ const ResourcesGrid: React.FC = () => {
           return;
         }
 
-        // Crear un enlace y simular un clic para descargar el archivo
-        const link = document.createElement('a');
-        
+        // Función mejorada para descargas que funciona en móviles
+        const downloadFile = (url: string, filename: string) => {
+          console.log('🔽 Intentando descarga:', { url, filename });
+          
+          // Detectar si es un dispositivo móvil
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          
+          if (isMobile) {
+            // En móviles, abrir el archivo en una nueva ventana/pestaña
+            // El navegador decidirá si descarga o abre el archivo
+            console.log('📱 Dispositivo móvil detectado, usando window.open()');
+            const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+            
+            if (!newWindow) {
+              // Si se bloquea el popup, mostrar un mensaje con enlace directo
+              console.log('🚫 Popup bloqueado, mostrando enlace directo');
+              const userConfirmed = confirm(
+                `Para descargar el recurso en tu dispositivo móvil, presiona OK para abrir el enlace de descarga.\n\nSi no se descarga automáticamente, mantén presionado el enlace y selecciona "Descargar" o "Guardar".`
+              );
+              if (userConfirmed) {
+                window.location.href = url;
+              }
+              return;
+            }
+            
+            // Para iOS Safari, también intentamos iniciar la descarga directamente
+            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+              setTimeout(() => {
+                window.location.href = url;
+              }, 100);
+            }
+          } else {
+            // En desktop, usar el método tradicional mejorado
+            console.log('💻 Dispositivo desktop detectado, usando elemento <a>');
+            try {
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = filename;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              
+              // Asegurar que el elemento esté en el DOM temporalmente
+              document.body.appendChild(link);
+              
+              // Iniciar la descarga
+              link.click();
+              
+              // Limpiar el elemento
+              document.body.removeChild(link);
+              
+              console.log('✅ Descarga iniciada en desktop');
+            } catch (error) {
+              console.error('❌ Error en descarga desktop, usando fallback:', error);
+              // Fallback: abrir en nueva ventana
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }
+          }
+        };
+
         // La URL ya viene procesada desde el servicio
         const downloadUrl = selectedResource.downloadUrl;
-        link.href = downloadUrl;
         
         // Extraer el nombre del archivo de la URL
         const urlParts = downloadUrl.split('/');
@@ -324,17 +379,13 @@ const ResourcesGrid: React.FC = () => {
           fileName = selectedResource.title.replace(/\s+/g, '-').toLowerCase() + extension;
         }
         
-        link.download = fileName;
-        link.target = '_blank'; // Abrir en nueva pestaña como fallback
+        // Iniciar la descarga usando la función mejorada
+        downloadFile(downloadUrl, fileName);
         
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        console.log('✅ Descarga iniciada:', {
-          url: link.href,
+        console.log('✅ Proceso de descarga completado:', {
+          url: downloadUrl,
           fileName: fileName,
-          target: link.target
+          isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
         });
       }
       
