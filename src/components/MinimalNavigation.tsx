@@ -36,6 +36,11 @@ export const MinimalNavigation: React.FC<MinimalNavigationProps> = ({ onNewslett
     setIsMobileMenuOpen(false);
   };
 
+  const handleTelegramJoin = () => {
+    window.open('https://t.me/+ETYWd_l_iIgzZDc0', '_blank');
+    setIsMobileMenuOpen(false);
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       const scrolled = window.scrollY > 100;
@@ -133,11 +138,22 @@ export const MinimalNavigation: React.FC<MinimalNavigationProps> = ({ onNewslett
                   WhatsApp
                 </button>
                 <button
+                  onClick={handleTelegramJoin}
+                  className="flex items-center gap-2 bg-gradient-to-r from-blue-600/80 to-indigo-600/80 backdrop-blur-sm px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 hover:from-blue-500/90 hover:to-indigo-500/90 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                  aria-label="Unirse al canal de Telegram"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Telegram
+                </button>
+                <button
                   onClick={onNewsletterOpen}
-                  className="bg-gradient-to-r from-blue-600/80 to-indigo-600/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 hover:from-blue-500/90 hover:to-indigo-500/90 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                  className="relative bg-gradient-to-r from-purple-600 to-pink-600 backdrop-blur-sm px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 hover:from-purple-500 hover:to-pink-500 hover:shadow-[0_0_25px_rgba(147,51,234,0.6)] shadow-lg shadow-purple-500/25 border border-purple-400/20 overflow-hidden group"
                   aria-label="Unirse a la comunidad"
                 >
-                  Únete
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="relative flex items-center gap-2">
+                    ✨ Únete
+                  </span>
                 </button>
               </div>
 
@@ -203,13 +219,23 @@ export const MinimalNavigation: React.FC<MinimalNavigationProps> = ({ onNewslett
               Canal de WhatsApp
             </button>
             <button
+              onClick={handleTelegramJoin}
+              className="flex items-center gap-2 w-full text-left py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 text-blue-300 hover:from-blue-600/30 hover:to-indigo-600/30 transition-all duration-300 border border-blue-500/20"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Canal de Telegram
+            </button>
+            <button
               onClick={() => {
                 onNewsletterOpen();
                 setIsMobileMenuOpen(false);
               }}
-              className="block w-full text-left py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 text-blue-300 hover:from-blue-600/30 hover:to-indigo-600/30 transition-all duration-300 border border-blue-500/20"
+              className="relative flex items-center gap-2 w-full text-left py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600/30 to-pink-600/30 text-purple-200 hover:from-purple-600/40 hover:to-pink-600/40 transition-all duration-300 border border-purple-500/30 overflow-hidden group"
             >
-              Unirse a la comunidad
+              <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <span className="relative flex items-center gap-2">
+                ✨ Unirse a la comunidad
+              </span>
             </button>
           </div>
         </div>

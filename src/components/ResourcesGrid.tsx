@@ -43,6 +43,35 @@ const ResourcesGrid: React.FC = () => {
   const [userName, setUserName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Configuración de paginación
+  const PAGE_SIZE = 9;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reiniciar a la primera página cuando cambian los filtros, la búsqueda o el orden
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, selectedType, sortBy]);
+
+  // Función para cambiar página y hacer scroll automático
+  const changePage = useCallback((newPage: number) => {
+    setCurrentPage(newPage);
+    
+    // Hacer scroll al principio de la sección de recursos
+    const resourcesSection = document.getElementById('recursos');
+    if (resourcesSection) {
+      resourcesSection.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    } else {
+      // Fallback: scroll al contenedor principal de recursos
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'smooth' 
+      });
+    }
+  }, []);
+
   // Debouncing para la búsqueda
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -128,10 +157,20 @@ const ResourcesGrid: React.FC = () => {
         score += type === term ? 30 : 15;
       }
 
-      // Búsqueda flexible (términos similares)
-      const similarity = getStringSimilarity(term, title);
-      if (similarity > 0.6) {
-        score += similarity * 10;
+      // Búsqueda flexible (términos similares) en todos los campos
+      const titleSimilarity = getStringSimilarity(term, title);
+      if (titleSimilarity > 0.6) {
+        score += titleSimilarity * 10;
+      }
+
+      const descriptionSimilarity = getStringSimilarity(term, description);
+      if (descriptionSimilarity > 0.6) {
+        score += descriptionSimilarity * 6;
+      }
+
+      const typeSimilarity = getStringSimilarity(term, type);
+      if (typeSimilarity > 0.7) {
+        score += typeSimilarity * 8;
       }
     });
 
@@ -178,8 +217,9 @@ const ResourcesGrid: React.FC = () => {
         .map(({ resource }) => resource);
     }
 
-    // Aplicar ordenamiento
-    if (!debouncedSearchTerm.trim() || sortBy !== 'relevance') {
+    // Aplicar ordenamiento (excepto cuando hay búsqueda y se ordenó por relevancia)
+    const shouldSort = !debouncedSearchTerm.trim() || sortBy !== 'relevance';
+    if (shouldSort) {
       filtered.sort((a, b) => {
         switch (sortBy) {
           case 'name-asc':
@@ -190,14 +230,62 @@ const ResourcesGrid: React.FC = () => {
             return (a.type || '').localeCompare(b.type || '');
           case 'relevance':
           default:
-            // Ya ordenado por relevancia si hay búsqueda
-            return 0;
+            // Si no hay búsqueda, ordenar por nombre por defecto
+            return a.title.localeCompare(b.title);
         }
       });
     }
 
     return filtered;
   }, [resources, debouncedSearchTerm, selectedType, sortBy, getSearchScore]);
+
+  // Calcular total de páginas y recursos paginados
+  const totalPages = Math.ceil(filteredAndSortedResources.length / PAGE_SIZE);
+  const paginatedResources = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredAndSortedResources.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredAndSortedResources, currentPage]);
+
+  // Función para generar números de página inteligentes
+  const getPageNumbers = useMemo(() => {
+    const pages = [];
+    const maxVisiblePages = 7; // Máximo de páginas visibles
+    
+    if (totalPages <= maxVisiblePages) {
+      // Si hay pocas páginas, mostrar todas
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Lógica para muchas páginas
+      if (currentPage <= 4) {
+        // Cerca del inicio
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        // Cerca del final
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // En el medio
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  }, [currentPage, totalPages]);
 
   const clearSearch = () => {
     setSearchTerm('');
@@ -517,7 +605,7 @@ const ResourcesGrid: React.FC = () => {
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
                   className="appearance-none bg-slate-800/80 border border-blue-900/50 rounded-lg px-4 py-2 pr-8 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 >
-                  {debouncedSearchTerm && <option value="relevance">Relevancia</option>}
+                  {debouncedSearchTerm.trim() && <option value="relevance">Relevancia</option>}
                   <option value="name-asc">Nombre (A-Z)</option>
                   <option value="name-desc">Nombre (Z-A)</option>
                   <option value="type">Tipo</option>
@@ -530,21 +618,21 @@ const ResourcesGrid: React.FC = () => {
           {/* Información de resultados */}
           <div className="text-center mb-4">
             <p className="text-blue-300 text-sm">
-                             {debouncedSearchTerm ? (
-                 <>
-                   Mostrando <span className="font-semibold text-blue-200">{filteredAndSortedResources.length}</span> resultados 
-                   {debouncedSearchTerm && <> para "<span className="font-semibold text-blue-200">{debouncedSearchTerm}</span>"</>}
-                   {selectedType !== 'all' && <> en <span className="font-semibold text-blue-200">{availableTypes.find(t => t.value === selectedType)?.label || selectedType}</span></>}
-                 </>
-               ) : (
-                 <>
-                   {selectedType === 'all' ? (
-                     <>Mostrando todos los <span className="font-semibold text-blue-200">{filteredAndSortedResources.length}</span> recursos</>
-                   ) : (
-                     <>Mostrando <span className="font-semibold text-blue-200">{filteredAndSortedResources.length}</span> recursos de tipo <span className="font-semibold text-blue-200">{availableTypes.find(t => t.value === selectedType)?.label || selectedType}</span></>
-                   )}
-                 </>
-               )}
+              {debouncedSearchTerm ? (
+                <>
+                  Mostrando <span className="font-semibold text-blue-200">{filteredAndSortedResources.length}</span> resultados 
+                  para "<span className="font-semibold text-blue-200">{debouncedSearchTerm}</span>"
+                  {selectedType !== 'all' && <> en <span className="font-semibold text-blue-200">{availableTypes.find(t => t.value === selectedType)?.label || selectedType}</span></>}
+                </>
+              ) : (
+                <>
+                  {selectedType === 'all' ? (
+                    <>Mostrando todos los <span className="font-semibold text-blue-200">{filteredAndSortedResources.length}</span> recursos</>
+                  ) : (
+                    <>Mostrando <span className="font-semibold text-blue-200">{filteredAndSortedResources.length}</span> recursos de tipo <span className="font-semibold text-blue-200">{availableTypes.find(t => t.value === selectedType)?.label || selectedType}</span></>
+                  )}
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -583,8 +671,9 @@ const ResourcesGrid: React.FC = () => {
           </div>
         </div>
       ) : (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredAndSortedResources.map((resource) => (
+          {paginatedResources.map((resource) => (
             <div key={resource.id} 
                 className="group relative">
               {/* Glow effect sutil pero potente */}
@@ -654,6 +743,110 @@ const ResourcesGrid: React.FC = () => {
             </div>
           ))}
         </div>
+
+        {/* Controles de paginación mejorados */}
+        {totalPages > 1 && (
+          <div className="flex flex-col items-center gap-4 mt-8">
+            {/* Información de página actual */}
+            <p className="text-sm text-blue-300">
+              Página {currentPage} de {totalPages} • {filteredAndSortedResources.length} recursos
+              {debouncedSearchTerm && (
+                <> encontrados para "<span className="font-semibold text-blue-200">{debouncedSearchTerm}</span>"</>
+              )}
+            </p>
+
+            {/* Controles de navegación */}
+            <div className="flex items-center gap-1">
+              {/* Botón primera página */}
+              <button
+                onClick={() => changePage(1)}
+                disabled={currentPage === 1}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  currentPage === 1
+                    ? 'bg-slate-700 text-blue-400 cursor-not-allowed opacity-50'
+                    : 'bg-slate-800/50 text-blue-300 hover:bg-slate-700/50'
+                }`}
+              >
+                ««
+              </button>
+
+                             {/* Botón anterior */}
+               <button
+                 onClick={() => {
+                   const newPage = Math.max(currentPage - 1, 1);
+                   if (newPage !== currentPage) {
+                     changePage(newPage);
+                   }
+                 }}
+                 disabled={currentPage === 1}
+                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                   currentPage === 1
+                     ? 'bg-slate-700 text-blue-400 cursor-not-allowed opacity-50'
+                     : 'bg-slate-800/50 text-blue-300 hover:bg-slate-700/50'
+                 }`}
+               >
+                 «
+               </button>
+
+              {/* Números de página */}
+              {getPageNumbers.map((page, idx) => {
+                if (page === '...') {
+                  return (
+                    <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-blue-400">
+                      ...
+                    </span>
+                  );
+                }
+                
+                return (
+                  <button
+                    key={page}
+                    onClick={() => changePage(page as number)}
+                    className={`min-w-[32px] h-8 flex items-center justify-center rounded-full text-sm font-medium transition-all ${
+                      currentPage === page
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                        : 'bg-slate-800/50 text-blue-300 hover:bg-slate-700/50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+
+                             {/* Botón siguiente */}
+               <button
+                 onClick={() => {
+                   const newPage = Math.min(currentPage + 1, totalPages);
+                   if (newPage !== currentPage) {
+                     changePage(newPage);
+                   }
+                 }}
+                 disabled={currentPage === totalPages}
+                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                   currentPage === totalPages
+                     ? 'bg-slate-700 text-blue-400 cursor-not-allowed opacity-50'
+                     : 'bg-slate-800/50 text-blue-300 hover:bg-slate-700/50'
+                 }`}
+               >
+                 »
+               </button>
+
+              {/* Botón última página */}
+              <button
+                onClick={() => changePage(totalPages)}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  currentPage === totalPages
+                    ? 'bg-slate-700 text-blue-400 cursor-not-allowed opacity-50'
+                    : 'bg-slate-800/50 text-blue-300 hover:bg-slate-700/50'
+                }`}
+              >
+                »»
+              </button>
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {/* Modal de descarga */}

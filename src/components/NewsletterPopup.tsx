@@ -113,6 +113,10 @@ export function NewsletterPopup({ isOpen, onClose }: NewsletterPopupProps) {
     window.open('https://whatsapp.com/channel/0029VbAm1y9CsU9OC8QY9X0t', '_blank');
   };
 
+  const handleTelegramJoin = () => {
+    window.open('https://t.me/+ETYWd_l_iIgzZDc0', '_blank');
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -223,6 +227,31 @@ export function NewsletterPopup({ isOpen, onClose }: NewsletterPopupProps) {
                 >
                   <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                   Unirse al canal de WhatsApp
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+
+              {/* Invitación al canal de Telegram */}
+              <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.156 1.674-.83 5.58-1.177 7.417-.146.775-.435 1.034-.714 1.06-.606.054-1.067-.4-1.655-.784-.92-.604-1.438-.98-2.33-1.57-1.03-.68-.362-1.05.224-1.66.153-.16 2.833-2.598 2.887-2.82.007-.028.013-.132-.05-.186-.063-.054-.156-.036-.223-.022-.095.02-1.598 1.016-4.51 2.98-.427.293-.814.44-1.16.437-.382-.006-1.116-.216-1.664-.394-.67-.218-1.202-.334-1.156-.705.024-.193.283-.39.777-.59 3.043-1.33 5.072-2.205 6.088-2.63 2.901-1.214 3.504-1.426 3.898-1.432.087-.002.28.02.406.123.104.085.133.198.147.277.013.07.03.228.016.352z"/>
+                  </svg>
+                  <h4 className="text-base sm:text-lg font-semibold text-cyan-400">
+                    ¡Únete a Telegram!
+                  </h4>
+                </div>
+                <p className="text-sm sm:text-base text-cyan-100 mb-3 sm:mb-4">
+                  Únete a nuestro canal de Telegram para recibir notificaciones en tiempo real y novedades exclusivas.
+                </p>
+                <button
+                  onClick={handleTelegramJoin}
+                  className="group w-full bg-gradient-to-r from-cyan-600 to-blue-600 px-4 sm:px-6 py-2 sm:py-3 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 sm:gap-3 transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] hover:from-cyan-500 hover:to-blue-500"
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.156 1.674-.83 5.58-1.177 7.417-.146.775-.435 1.034-.714 1.06-.606.054-1.067-.4-1.655-.784-.92-.604-1.438-.98-2.33-1.57-1.03-.68-.362-1.05.224-1.66.153-.16 2.833-2.598 2.887-2.82.007-.028.013-.132-.05-.186-.063-.054-.156-.036-.223-.022-.095.02-1.598 1.016-4.51 2.98-.427.293-.814.44-1.16.437-.382-.006-1.116-.216-1.664-.394-.67-.218-1.202-.334-1.156-.705.024-.193.283-.39.777-.59 3.043-1.33 5.072-2.205 6.088-2.63 2.901-1.214 3.504-1.426 3.898-1.432.087-.002.28.02.406.123.104.085.133.198.147.277.013.07.03.228.016.352z"/>
+                  </svg>
+                  Unirse a Telegram
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
