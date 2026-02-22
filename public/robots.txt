@@ -5,49 +5,7 @@
 User-agent: *
 Allow: /
 
-# Bloquear acceso a archivos y directorios sensibles
-Disallow: /src/
-Disallow: /node_modules/
-Disallow: /.git/
-Disallow: /.env
-Disallow: /package.json
-Disallow: /package-lock.json
-Disallow: /vite.config.ts
-Disallow: /tsconfig*.json
-Disallow: /tailwind.config.js
-Disallow: /postcss.config.js
-Disallow: /eslint.config.js
-Disallow: /dist/
-
-# Permitir acceso específico a recursos importantes
-Allow: /favicon.svg
-Allow: /og-image.jpg
-Allow: /public/workflows/
-Allow: /public/
-
-# Configuraciones específicas para motores de búsqueda principales
-
-# Google
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-# Bing
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
-
-# Yandex
-User-agent: YandexBot
-Allow: /
-Crawl-delay: 2
-
-# DuckDuckGo
-User-agent: DuckDuckBot
-Allow: /
-Crawl-delay: 1
-
-# Bloquear bots maliciosos y scraping no autorizado
+# Bloquear bots de IA y scraping masivo no autorizado
 User-agent: CCBot
 Disallow: /
 
@@ -60,20 +18,5 @@ Disallow: /
 User-agent: ia_archiver
 Disallow: /
 
-User-agent: SemrushBot
-Disallow: /
-
-User-agent: AhrefsBot
-Disallow: /
-
-User-agent: MJ12bot
-Disallow: /
-
-User-agent: DotBot
-Disallow: /
-
-# Enlaces al sitemap
+# Sitemap
 Sitemap: https://elproyectoia.com/sitemap.xml
-
-# Host principal (opcional, para clarificar la URL canónica)
-Host: elproyectoia.com 

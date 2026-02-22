@@ -205,7 +205,7 @@ function App() {
               </a>
             </nav>
             <div className="text-blue-300 text-lg">
-              © 2025 El Proyecto IA. Todos los derechos reservados.
+              © 2026 El Proyecto IA. Todos los derechos reservados.
             </div>
           </div>
         </div>
